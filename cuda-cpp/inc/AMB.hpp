@@ -491,15 +491,15 @@ __global__ void set_blocked_cl(compIdType *d_blocked_cl, compIdType *d_blocked_c
     width += block_size;
   
     idType shfl_width;
-    shfl_width = __shfl_xor(width, 16);
+    shfl_width = __shfl_xor_sync(0xffffffff, width, 16);
     width = (width < shfl_width)? shfl_width : width;
-    shfl_width = __shfl_xor(width, 8);
+    shfl_width = __shfl_xor_sync(0xffffffff, width, 8);
     width = (width < shfl_width)? shfl_width : width;
-    shfl_width = __shfl_xor(width, 4);
+    shfl_width = __shfl_xor_sync(0xffffffff, width, 4);
     width = (width < shfl_width)? shfl_width : width;
-    shfl_width = __shfl_xor(width, 2);
+    shfl_width = __shfl_xor_sync(0xffffffff, width, 2);
     width = (width < shfl_width)? shfl_width : width;
-    shfl_width = __shfl_xor(width, 1);
+    shfl_width = __shfl_xor_sync(0xffffffff, width, 1);
     width = (width < shfl_width)? shfl_width : width;
 
     if (j == 0) {
