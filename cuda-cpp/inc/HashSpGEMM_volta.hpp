@@ -569,6 +569,8 @@ __global__ void hash_numeric_pwarp(const idType *d_arpt, const idType *d_acol, c
         }
     }
   
+    __syncthreads();
+
     for (j = tid; j < (TS_N_P); j += PWARP) {
         if (id_table[soffset + j] != -1) {
             index = atomicAdd(d_nz + rid, 1);
@@ -577,6 +579,8 @@ __global__ void hash_numeric_pwarp(const idType *d_arpt, const idType *d_acol, c
         }
     }
     
+    __syncthreads();
+
     idType nz = d_nz[rid];
     if (sort) {
         // Sorting for shared data
