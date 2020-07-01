@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     VT *x, *y;
 
     /* Set CSR reding from MM file or generating random matrix */
-    cout << "Read matrix data from " << argv[1] << endl;
+    std::cout << "Read matrix data from " << argv[1] << std::endl;
     mat.init_data_from_mtx(argv[1]);
   
     /* Init vectors on CPU */

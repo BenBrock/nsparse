@@ -40,7 +40,7 @@ void spmv(CSR<idType, valType> &mat, const valType *x, valType *y, Plan<idType> 
     /* Converting format from CSR to AMB */
     a_mat.convert_from_csr(mat, plan, d_x);
     printf("Format Conversion Cost (CSR=>AMB, %d-%d)\n", a_mat.seg_size, a_mat.block_size);
-    cout << "Format Conversion: CSR => AMB(" << a_mat.seg_size << ", " << a_mat.block_size << ", " << plan.thread_block << ", " << plan.thread_grid << ")" << endl;
+    std::cout << "Format Conversion: CSR => AMB(" << a_mat.seg_size << ", " << a_mat.block_size << ", " << plan.thread_block << ", " << plan.thread_grid << ")" << std::endl;
 
     /* Execution of SpMV on Device */
     min_msec = FLT_MAX;
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     Plan<IT> plan;
 
     /* Set CSR reding from MM file or generating random matrix */
-    cout << "Read matrix data from " << argv[1] << endl;
+    std::cout << "Read matrix data from " << argv[1] << std::endl;
     mat.init_data_from_mtx(argv[1]);
   
     /* Init vectors on CPU */

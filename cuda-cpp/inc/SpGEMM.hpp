@@ -75,7 +75,7 @@ void SpGEMM_cuSPARSE_kernel(CSR<idType, valType> a, CSR<idType, valType> b, CSR<
 
     status = cusparseXcsrgemmNnz(cusparseHandle, trans_a, trans_b, a.nrow, b.ncolumn, a.ncolumn, descr_a, a.nnz, a.d_rpt, a.d_colids, descr_b, b.nnz, b.d_rpt, b.d_colids, descr_c, c.d_rpt, &(c.nnz));
     if (status != CUSPARSE_STATUS_SUCCESS) {
-        cout << "cuSPARSE failed at Symbolic phase" << endl;
+        std::cout << "cuSPARSE failed at Symbolic phase" << std::endl;
     }
 
     cudaMalloc((void **)&(c.d_colids), sizeof(idType) * (c.nnz));
@@ -84,7 +84,7 @@ void SpGEMM_cuSPARSE_kernel(CSR<idType, valType> a, CSR<idType, valType> b, CSR<
     status = SpGEMM_cuSPARSE_numeric(a, b, c, cusparseHandle, trans_a, trans_b, descr_a, descr_b, descr_c);
     
     if (status != CUSPARSE_STATUS_SUCCESS) {
-        cout << "cuSPARSE failed at Numeric phase" << endl;
+        std::cout << "cuSPARSE failed at Numeric phase" << std::endl;
     }
 }
 

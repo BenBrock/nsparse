@@ -87,11 +87,11 @@ void spgemm_hash(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, val
     CSR<IT, VT> cusparse_c;
     SpGEMM_cuSPARSE(a, b, cusparse_c);
     if (c == cusparse_c) {
-        cout << "HashSpGEMM is correctly executed" << endl;
+        std::cout << "HashSpGEMM is correctly executed" << std::endl;
     }
-    cout << "Nnz of A: " << a.nnz << endl; 
-    cout << "Number of intermediate products: " << flop_count / 2 << endl; 
-    cout << "Nnz of C: " << c.nnz << endl; 
+    std::cout << "Nnz of A: " << a.nnz << std::endl; 
+    std::cout << "Number of intermediate products: " << flop_count / 2 << std::endl; 
+    std::cout << "Nnz of C: " << c.nnz << std::endl; 
     cusparse_c.release_cpu_csr();
 #endif
 
@@ -109,12 +109,12 @@ int main(int argc, char *argv[])
     CSR<IT, VT> a, b, c;
 
     /* Set CSR reding from MM file or generating random matrix */
-    cout << "Initialize Matrix A" << endl;
-    cout << "Read matrix data from " << argv[1] << endl;
+    std::cout << "Initialize Matrix A" << std::endl;
+    std::cout << "Read matrix data from " << argv[1] << std::endl;
     a.init_data_from_mtx(argv[1]);
 
-    cout << "Initialize Matrix B" << endl;
-    cout << "Read matrix data from " << argv[1] << endl;
+    std::cout << "Initialize Matrix B" << std::endl;
+    std::cout << "Read matrix data from " << argv[1] << std::endl;
     b.init_data_from_mtx(argv[1]);
   
     /* Execution of SpGEMM on GPU */

@@ -96,12 +96,12 @@ int main(int argc, char *argv[])
     CSR<IT, VT> a, b, c;
 
     /* Set CSR reding from MM file or generating random matrix */
-    cout << "Initialize Matrix A" << endl;
-    cout << "Read matrix data from " << argv[1] << endl;
+    std::cout << "Initialize Matrix A" << std::endl;
+    std::cout << "Read matrix data from " << argv[1] << std::endl;
     a.init_data_from_mtx(argv[1]);
 
-    cout << "Initialize Matrix B" << endl;
-    cout << "Read matrix data from " << argv[1] << endl;
+    std::cout << "Initialize Matrix B" << std::endl;
+    std::cout << "Read matrix data from " << argv[1] << std::endl;
     b.init_data_from_mtx(argv[1]);
   
     /* Execution of SpGEMM on GPU */
