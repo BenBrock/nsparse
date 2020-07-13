@@ -11,6 +11,8 @@
 #include <CSR.hpp>
 #include <BIN.hpp>
 
+#include <utils.hpp>
+
 #ifndef HASHSPGEMM_H
 #define HASHSPGEMM_H
 
@@ -411,7 +413,7 @@ __global__ void hash_symbolic_gl2(const idType *d_arpt, const idType *d_acol,
     }
 }
 
-template <class idType, class valType>
+template <class idType, class valType, class Allocator = nsparse::cuda_allocator<valType>>
 void hash_symbolic(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, valType> &c, BIN<idType, BIN_NUM> &bin)
 {
     idType i;
@@ -455,8 +457,10 @@ void hash_symbolic(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, v
             	    idType fail_count;
             	    idType *d_fail_count, *d_fail_perm;
             	    fail_count = 0;
-            	    checkCudaErrors(cudaMalloc((void **)&d_fail_count, sizeof(idType)));
-            	    checkCudaErrors(cudaMalloc((void **)&d_fail_perm, sizeof(idType) * bin.bin_size[i]));
+            	    // checkCudaErrors(cudaMalloc((void **)&d_fail_count, sizeof(idType)));
+                    d_fail_count = nsparse::allocate_with<idType, Allocator>(1);
+            	    // checkCudaErrors(cudaMalloc((void **)&d_fail_perm, sizeof(idType) * bin.bin_size[i]));
+                    d_fail_perm = nsparse::allocate_with<idType, Allocator>(bin.bin_size[i]);
             	    cudaMemcpy(d_fail_count, &fail_count, sizeof(idType), cudaMemcpyHostToDevice);
             	    BS = 1024;
             	    GS = bin.bin_size[i];
@@ -466,16 +470,20 @@ void hash_symbolic(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, v
               	        idType max_row_nz = bin.max_flop;
             	        size_t table_size = (size_t)max_row_nz * fail_count;
             	        idType *d_id_table;
-            	        checkCudaErrors(cudaMalloc((void **)&(d_id_table), sizeof(idType) * table_size));
+            	        // checkCudaErrors(cudaMalloc((void **)&(d_id_table), sizeof(idType) * table_size));
+                        d_id_table = nsparse::allocate_with<idType, Allocator>(table_size);
             	        BS = 1024;
             	        GS = div_round_up(table_size, BS);
             	        init_id_table<idType><<<GS, BS, 0, bin.stream[i]>>>(d_id_table, table_size);
             	        GS = bin.bin_size[i];
 	                    hash_symbolic_gl<idType><<<GS, BS, 0, bin.stream[i]>>>(a.d_rpt, a.d_colids, b.d_rpt, b.d_colids, d_fail_perm, bin.d_count, d_id_table, max_row_nz, 0, fail_count);
-                        cudaFree(d_id_table);
+                        // cudaFree(d_id_table);
+                        nsparse::deallocate_with<Allocator>(d_id_table);
   	                }
-                    cudaFree(d_fail_count);
-                    cudaFree(d_fail_perm);
+                    // cudaFree(d_fail_count);
+                    nsparse::deallocate_with<Allocator>(d_fail_count);
+                    // cudaFree(d_fail_perm);
+                    nsparse::deallocate_with<Allocator>(d_fail_perm);
 #else
                     idType max_row_nz = bin.max_flop;
                     idType conc_row_num = min(56 * 2, bin.bin_size[i]);
@@ -485,13 +493,15 @@ void hash_symbolic(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, v
                         table_size = max_row_nz * conc_row_num;
                     }
                     idType *d_id_table;
-                    checkCudaErrors(cudaMalloc((void **)&d_id_table, sizeof(idType) * table_size));
+                    // checkCudaErrors(cudaMalloc((void **)&d_id_table, sizeof(idType) * table_size));
+                    d_id_table = nsparse::allocate_with<idType, Allocator>(table_size);
                     BS = 1024;
                     // GS = div_round_up(table_size, BS);
                     // init_id_table<idType><<<GS, BS, 0, bin.stream[i]>>>(d_id_table, table_size);
                     GS = conc_row_num;
                     hash_symbolic_gl2<idType><<<GS, BS, 0, bin.stream[i]>>>(a.d_rpt, a.d_colids, b.d_rpt, b.d_colids, bin.d_permutation, bin.d_count, d_id_table, max_row_nz, bin.bin_offset[i], bin.bin_size[i], conc_row_num);
-                    cudaFree(d_id_table);
+                    // cudaFree(d_id_table);
+                    nsparse::deallocate_with<Allocator>(d_id_table);
 #endif
                 }
                 break;
@@ -896,7 +906,7 @@ __global__ void hash_numeric_gl(const idType *d_arpt, const idType *d_acolids, c
 }
 #endif
 
-template <class idType, class valType, bool sort>
+template <class idType, class valType, bool sort, class Allocator = nsparse::cuda_allocator<valType>>
 void hash_numeric(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, valType> &c, BIN<idType, BIN_NUM> &bin)
 {
     idType i;
@@ -949,8 +959,10 @@ void hash_numeric(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, va
 #endif
                     idType *d_id_table;
                     valType *d_value_table;
-                    checkCudaErrors(cudaMalloc((void **)&(d_id_table), sizeof(idType) * table_size));
-                    checkCudaErrors(cudaMalloc((void **)&(d_value_table), sizeof(valType) * table_size));
+                    // checkCudaErrors(cudaMalloc((void **)&(d_id_table), sizeof(idType) * table_size));
+                    d_id_table = nsparse::allocate_with<idType, Allocator>(table_size);
+                    // checkCudaErrors(cudaMalloc((void **)&(d_value_table), sizeof(valType) * table_size));
+                    d_value_table = nsparse::allocate_with<valType, Allocator>(table_size);
                     BS = 1024;
 #ifdef ORIGINAL_HASH
                     GS = div_round_up(table_size, BS);
@@ -961,8 +973,10 @@ void hash_numeric(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, va
                     GS = conc_row_num;
 #endif
                     hash_numeric_gl<idType, valType, sort><<<GS, BS, 0, bin.stream[i]>>>(a.d_rpt, a.d_colids, a.d_values, b.d_rpt, b.d_colids, b.d_values, c.d_rpt, c.d_colids, c.d_values, bin.d_permutation, bin.d_count, d_id_table, d_value_table, max_row_nz, bin.bin_offset[i], bin.bin_size[i]);
-                    cudaFree(d_id_table);
-                    cudaFree(d_value_table);
+                    // cudaFree(d_id_table);
+                    nsparse::deallocate_with<Allocator>(d_id_table);
+                    // cudaFree(d_value_table);
+                    nsparse::deallocate_with<Allocator>(d_value_table);
                 }
                 break;
             }
@@ -971,7 +985,7 @@ void hash_numeric(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, va
     cudaDeviceSynchronize();
 }
 
-template <bool sort, class idType, class valType>
+template <bool sort, class idType, class valType, class Allocator = nsparse::cuda_allocator<valType>>
 void SpGEMM_Hash(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, valType> &c)
 {
     cudaEvent_t event[2];
@@ -985,34 +999,37 @@ void SpGEMM_Hash(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, val
     c.nrow = a.nrow;
     c.ncolumn = b.ncolumn;
     c.devise_malloc = true;
-    cudaMalloc((void **)&(c.d_rpt), sizeof(idType) * (c.nrow + 1));
-    
+    // cudaMalloc((void **)&(c.d_rpt), sizeof(idType) * (c.nrow + 1));
+    c.d_rpt = nsparse::allocate_with<idType, Allocator>(c.nrow+1);
+
     bin.set_max_bin(a.d_rpt, a.d_colids, b.d_rpt, a.nrow, TS_S_P, TS_S_T);
 
     cudaEventRecord(event[0], 0);
-    hash_symbolic(a, b, c, bin);
+    hash_symbolic<idType, valType, Allocator>(a, b, c, bin);
     cudaEventRecord(event[1], 0);
     cudaDeviceSynchronize();
     cudaEventElapsedTime(&msec, event[0], event[1]);
     // cout << "HashSymbolic: " << msec << endl;
     
-    cudaMalloc((void **)&(c.d_colids), sizeof(idType) * (c.nnz));
-    cudaMalloc((void **)&(c.d_values), sizeof(valType) * (c.nnz));
+    // cudaMalloc((void **)&(c.d_colids), sizeof(idType) * (c.nnz));
+    c.d_colids = nsparse::allocate_with<idType, Allocator>(c.nnz);
+    // cudaMalloc((void **)&(c.d_values), sizeof(valType) * (c.nnz));
+    c.d_values = nsparse::allocate_with<valType, Allocator>(c.nnz);
 
     bin.set_min_bin(a.nrow, TS_N_P, TS_N_T);
 
     cudaEventRecord(event[0], 0);
-    hash_numeric<idType, valType, sort>(a, b, c, bin);
+    hash_numeric<idType, valType, sort, Allocator>(a, b, c, bin);
     cudaEventRecord(event[1], 0);
     cudaDeviceSynchronize();
     cudaEventElapsedTime(&msec, event[0], event[1]);
     // cout << "HashNumeric: " << msec << endl;
 }
 
-template <class idType, class valType>
+template <class idType, class valType, class Allocator = nsparse::cuda_allocator<valType>>
 void SpGEMM_Hash(CSR<idType, valType> a, CSR<idType, valType> b, CSR<idType, valType> &c)
 {
-    SpGEMM_Hash<true, idType, valType>(a, b, c);
+    SpGEMM_Hash<true, idType, valType, Allocator>(a, b, c);
 }
 
 template <bool sort, class idType, class valType>
