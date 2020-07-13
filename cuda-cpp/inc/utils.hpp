@@ -4,9 +4,6 @@
 
 namespace nsparse {
 
-template <typename T>
-using allocator = backend::allocator<T>;
-
 // Rebind Allocator<U> as type T
 template <typename Allocator, typename T>
 using rebind_allocator_t = typename Allocator::rebind<T>::other;
